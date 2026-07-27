@@ -1,16 +1,14 @@
 """
-gemini_client.py — Gemini Agent Conversation Loop (using official google-genai SDK)
-====================================================================================
+gemini_client.py — Gemini Agent Conversation Loop (google-genai SDK)
+======================================================================
 
 WHY THIS FILE EXISTS:
-    This module manages the conversation between the user and Gemini using the
-    official modern `google-genai` SDK (`from google import genai`).
+    Manages multi-turn conversation and function calling with Google Gemini
+    using the official google-genai SDK.
 
-    It supports:
-      - Latest Gemini models (gemini-2.5-flash, gemini-2.0-flash, gemini-1.5-flash, etc.)
-      - Function calling round-trips
-      - Intent-based fallback for missed tool calls
-      - Conversation memory across chat turns
+FIX:
+    Intelligent tool calling + fallback data injection that complies
+    with Google's thought signature enforcement on Gemini 2.5 / 3.x models.
 """
 
 import logging
@@ -26,7 +24,7 @@ from agent.intent_fallback import classify_intent, INTENT_TOOL_MAP
 
 logger = logging.getLogger(__name__)
 
-# Initialize the official google-genai client
+# Initialize official google-genai client
 client = genai.Client(api_key=GOOGLE_API_KEY)
 
 MAX_TOOL_TURNS = 4
@@ -38,21 +36,10 @@ async def run_agent(
     tool_handler: Callable[[str, dict], Awaitable[dict]]
 ) -> str:
     """
-    Run the full Gemini agent loop using the google-genai SDK.
-
-    Preserves thought signatures on model candidate responses during
-    multi-turn tool calling.
+    Run the Gemini agent loop for a user query.
     """
-    # --- Step 1: Build contents list ---
     contents = _build_contents_list(conversation_history, user_query)
-
-    # --- Step 2: Classify intent (Fallback Safety Net) ---
     intent = classify_intent(user_query)
-    if intent:
-        logger.info(f"Intent fallback classified query as: '{intent}'")
-
-    # --- Step 3: Multi-turn loop ---
-    fallback_used = False
 
     for turn in range(MAX_TOOL_TURNS):
         try:
@@ -79,7 +66,7 @@ async def run_agent(
                 f"{[fc['name'] for fc in fn_calls]}"
             )
 
-            # Preserve the model's output content (contains thought signature)
+            # Preserve model candidate content (thought signature)
             if response.candidates and response.candidates[0].content:
                 contents.append(response.candidates[0].content)
 
@@ -93,42 +80,39 @@ async def run_agent(
                     )
                 )
 
-            # Append tool response turn
             contents.append(types.Content(role="user", parts=tool_parts))
 
         else:
-            # Fallback if Gemini missed tool selection
-            if intent and not fallback_used:
-                fallback_used = True
+            # If Gemini returned text without calling a tool, but we detected a data intent
+            if intent:
                 fallback_tools = INTENT_TOOL_MAP.get(intent, [])
                 if fallback_tools:
                     forced_tool = fallback_tools[0]
-                    logger.warning(
-                        f"Applying intent fallback: forcing '{forced_tool}' (intent='{intent}')"
+                    logger.info(
+                        f"Applying fallback data injection for intent '{intent}' -> '{forced_tool}'"
                     )
                     result = await tool_handler(forced_tool, {})
-
-                    # Append forced tool call and response
-                    contents.append(
-                        types.Content(
-                            role="model",
-                            parts=[types.Part.from_function_call(name=forced_tool, args={})]
-                        )
+                    
+                    # Inject pre-calculated result directly into context
+                    context_query = (
+                        f"User question: {user_query}\n\n"
+                        f"Retrieved Business Data for {forced_tool}:\n"
+                        f"{result}"
                     )
-                    contents.append(
-                        types.Content(
-                            role="user",
-                            parts=[
-                                types.Part.from_function_response(
-                                    name=forced_tool,
-                                    response={"result": result}
-                                )
-                            ]
+                    try:
+                        fallback_resp = client.models.generate_content(
+                            model=GEMINI_MODEL,
+                            contents=context_query,
+                            config=types.GenerateContentConfig(
+                                system_instruction=SYSTEM_PROMPT,
+                            )
                         )
-                    )
-                    continue
+                        if fallback_resp.text:
+                            return fallback_resp.text
+                    except Exception as e:
+                        logger.error(f"Fallback generation error: {e}")
 
-            # Return final text answer
+            # Return Gemini's text response
             final_text = response.text or _extract_text_fallback(response)
             if final_text:
                 return final_text
@@ -159,38 +143,8 @@ def _build_contents_list(messages: list[dict], query: str) -> list[types.Content
     return contents
 
 
-def _extract_text_fallback(response) -> str:
-    """Extract text from candidates if response.text is empty."""
-    try:
-        if response.candidates:
-            parts = response.candidates[0].content.parts
-            for p in parts:
-                if p.text:
-                    return p.text
-    except Exception:
-        pass
-    return ""
-
-
-def _build_genai_history(messages: list[dict]) -> list[types.Content]:
-    """Convert conversation message dicts to google.genai Content types."""
-    history = []
-    for msg in messages:
-        role = msg.get("role", "user")
-        content = msg.get("content", "")
-        genai_role = "model" if role == "assistant" else "user"
-
-        history.append(
-            types.Content(
-                role=genai_role,
-                parts=[types.Part.from_text(text=content)]
-            )
-        )
-    return history
-
-
 def _extract_function_calls(response) -> list[dict]:
-    """Extract function calls from a google-genai GenerateContentResponse."""
+    """Extract function calls from a google-genai response."""
     calls = []
     try:
         if response.function_calls:
@@ -202,3 +156,16 @@ def _extract_function_calls(response) -> list[dict]:
     except (AttributeError, TypeError) as e:
         logger.warning(f"Error extracting function calls: {e}")
     return calls
+
+
+def _extract_text_fallback(response) -> str:
+    """Extract text from candidates if response.text is empty."""
+    try:
+        if response.candidates:
+            parts = response.candidates[0].content.parts
+            for p in parts:
+                if p.text:
+                    return p.text
+    except Exception:
+        pass
+    return ""
