@@ -1,6 +1,6 @@
 # Monday.com Business Intelligence Agent
 
-> A natural language conversational BI interface powered by Google Gemini and FastAPI, providing pre-calculated, data-caveated analytics over Monday.com Work Orders and Deals Pipeline boards.
+> A natural language conversational BI interface powered by Groq Llama 3.3 70B and FastAPI, providing pre-calculated, data-caveated analytics over Monday.com Work Orders and Deals Pipeline boards.
 
 ---
 
@@ -21,8 +21,8 @@ Language models are probabilistic text generators, not deterministic calculation
 
 **Our Architecture Enforces**:
 
-1. **Gemini performs zero calculations** — 100% of mathematical aggregations, probability weightings, and win rates are executed in pure Python.
-2. **Gemini sees zero raw data rows** — Only normalized, pre-aggregated KPI summaries or clean filtered records are passed to the model.
+1. **LLM performs zero calculations** — 100% of mathematical aggregations, probability weightings, and win rates are executed in pure Python.
+2. **LLM sees zero raw data rows** — Only normalized, pre-aggregated KPI summaries or clean filtered records are passed to the model.
 3. **Transparent Data Quality** — Missing values, Excel import bugs, and system placeholders are explicitly tracked and reported as `⚠️ Data note:` caveats.
 
 ---
@@ -38,7 +38,7 @@ FastAPI Backend
        ├─► Intent Classifier (Keyword Fallback Safety Net: pipeline / revenue / operations)
        │
        ▼
-Google Gemini API (Flash Model)
+Groq LLM API (Llama 3.3 70B Model)
        │  Tool Selection (2 exposed tools: query_deals / query_work_orders)
        ▼
 Tool Handler (Python)
@@ -50,7 +50,7 @@ Tool Handler (Python)
        └─► Deterministic Analytics Engine (Internal analytics chaining: pipeline / revenue summaries)
        │
        ▼ Structured Pre-Aggregated Summary JSON + Data Quality Caveats
-Google Gemini API (Natural Language Explanation & Formatting)
+Groq LLM API (Natural Language Explanation & Formatting)
        │
        ▼
 React Frontend UI (Markdown formatting, starter query chips, caveats panel)
@@ -62,7 +62,7 @@ React Frontend UI (Markdown formatting, starter query chips, caveats panel)
 
 | Component                    | Choice                                | Reason & Defense                                                                                                                                      |
 | ---------------------------- | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **LLM Interface**      | Google Gemini API (Flash Family)      | High instruction-following accuracy, function calling support, fast execution speed, and model name configurable via env var without code changes.    |
+| **LLM Interface**      | Groq API (Llama 3.3 70B)             | ~300ms ultra-fast inference speed, high instruction accuracy, zero rate-limit quota issues, and model name configurable via env var without code changes. |
 | **Backend API**        | Python 3.11 + FastAPI                 | Async-native runtime prevents slow external HTTP calls from blocking concurrent client requests. Built-in Pydantic validation and auto OpenAPI specs. |
 | **HTTP Client**        | `httpx`                             | Non-blocking async client supporting concurrent GraphQL request execution and automatic retry logic.                                                  |
 | **Data Normalization** | `pandas` + `re` + `datetime`    | Resolves Lotus 1-2-3 / Excel epoch date bugs, parses mixed quantity strings, and detects placeholder amounts.                                         |
@@ -122,7 +122,9 @@ All calculations live in `backend/analytics/` as pure, deterministic Python func
 
 ### Tool Simplification (2 Exposed Tools)
 
-Instead of exposing 4 separate retrieval and compute tools to Gemini, we expose **only 2 tools**:
+### Tool Simplification (2 Exposed Tools)
+
+Instead of exposing 4 separate retrieval and compute tools to the LLM, we expose **only 2 tools**:
 
 - `query_deals`: All questions regarding the Deals Pipeline.
 - `query_work_orders`: All questions regarding Work Orders (financials & operations).
@@ -155,8 +157,8 @@ Each tool accepts an `output_format` parameter:
 | Challenge                                     | Solution                                                                                                                                              |
 | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Excel serial date bug**               | Implemented`parse_date()` using epoch `1899-12-30` and serial range validation.                                                                   |
-| **LLM tool selection hesitation**       | Reduced tools exposed to Gemini from 4 to 2, handling computation chaining internally in Python.                                                      |
-| **Vague queries missing keywords**      | Implemented 3-category intent fallback (`pipeline`, `revenue`, `operations`) to force tool execution if Gemini returns text without tool calls. |
+| **LLM tool selection hesitation**       | Reduced tools exposed to LLM from 4 to 2, handling computation chaining internally in Python.                                                         |
+| **Vague queries missing keywords**      | Implemented 3-category intent fallback (`pipeline`, `revenue`, `operations`) to force tool execution if LLM returns text without tool calls.   |
 | **Monday.com rate limits (60 req/min)** | Added`cachetools` TTL caching (10 min) and exponential backoff retry logic (`2s → 4s → 8s`) in `httpx` client.                                |
 
 ---
@@ -174,7 +176,7 @@ Each tool accepts an `output_format` parameter:
 ### 1. Clone & Setup Backend
 
 ```bash
-git clone https://github.com/your-username/monday-bi-agent.git
+git clone https://github.com/Krishna2805/monday-bi-agent.git
 cd monday-bi-agent/backend
 
 # Create virtual environment
@@ -190,8 +192,8 @@ pip install -r requirements.txt
 Copy `.env.example` to `.env` in `backend/`:
 
 ```env
-GOOGLE_API_KEY=AIza...
-GEMINI_MODEL=gemini-2.0-flash
+GROQ_API_KEY=gsk_...
+LLM_MODEL=llama-3.3-70b-versatile
 MONDAY_API_TOKEN=eyJ...
 MONDAY_WO_BOARD_ID=1234567890
 MONDAY_DEALS_BOARD_ID=0987654321

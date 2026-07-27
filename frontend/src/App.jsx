@@ -27,7 +27,7 @@ export default function App() {
       const health = await getBackendHealth();
       if (health && health.status === "ok") {
         setIsConnected(true);
-        setModelName(health.model || "gemini-3.6-flash");
+        setModelName(health.model || "llama-3.3-70b-versatile");
       } else {
         setIsConnected(false);
       }

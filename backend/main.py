@@ -25,9 +25,9 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 
-from config import GEMINI_MODEL
+from config import LLM_MODEL
 from models import ChatRequest, ChatResponse
-from agent.gemini_client import run_agent
+from agent.groq_client import run_agent
 from agent.tool_handler import handle_tool_call
 
 # Configure logging format for production visibility
@@ -40,7 +40,7 @@ logger = logging.getLogger(__name__)
 # --- App Initialization ---
 app = FastAPI(
     title="Monday.com BI Agent",
-    description="Business Intelligence agent powered by Gemini, backed by Monday.com data",
+    description="Business Intelligence agent powered by Groq Llama 3.3 70B, backed by Monday.com data",
     version="0.1.0"
 )
 
@@ -77,11 +77,11 @@ async def root():
 async def health():
     """
     Health check endpoint.
-    Returns status and configured Gemini model name.
+    Returns status and configured LLM model name.
     """
     return {
         "status": "ok",
-        "model": GEMINI_MODEL
+        "model": LLM_MODEL
     }
 
 

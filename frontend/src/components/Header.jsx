@@ -39,7 +39,7 @@ export function Header({ onGenerateBrief, isConnected, modelName }) {
           </span>
           <span className="text-slate-600">|</span>
           <span className="text-slate-400 font-mono">
-            {modelName || "gemini-3.6-flash"}
+            {modelName || "llama-3.3-70b-versatile"}
           </span>
         </div>
 
