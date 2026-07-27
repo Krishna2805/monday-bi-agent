@@ -55,8 +55,8 @@ def compute_revenue_summary(
     Compute comprehensive revenue and operational metrics from work orders.
 
     This is the PRIMARY analytics function for the Work Orders board.
-    It's called internally by tool_handler.py when Gemini invokes
-    query_work_orders with output_format="summary" (the default).
+    It's called internally by tool_handler.py when query_work_orders
+    is invoked with output_format="summary" (the default).
 
     Args:
         work_orders: List of normalized work order dicts.

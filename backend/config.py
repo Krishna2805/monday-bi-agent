@@ -16,9 +16,6 @@ load_dotenv()
 GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
 LLM_MODEL: str = os.getenv("LLM_MODEL", "llama-3.3-70b-versatile")
 
-# Backward compatibility alias
-GEMINI_MODEL: str = LLM_MODEL
-
 # --- Monday.com Configuration ---
 MONDAY_API_TOKEN: str = os.getenv("MONDAY_API_TOKEN", "")
 WO_BOARD_ID: str = os.getenv("MONDAY_WO_BOARD_ID", "")

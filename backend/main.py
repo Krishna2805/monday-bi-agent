@@ -5,7 +5,7 @@ main.py — FastAPI Application Entry Point
 WHY THIS FILE EXISTS:
     This is the single entry point for the entire backend API.
     FastAPI is chosen because:
-      1. It's async-native — our Monday.com API calls and Gemini calls
+      1. It's async-native — our Monday.com API calls and Groq LLM calls
          are all I/O-bound, so async gives us concurrency without threads
       2. It auto-generates OpenAPI docs at /docs (useful for debugging)
       3. Pydantic integration for request/response validation
@@ -92,8 +92,8 @@ async def chat(request: ChatRequest):
     Main BI agent conversational endpoint.
 
     Accepts a list of conversation messages (last message is current query).
-    Orchestrates Gemini function calling, Monday.com data retrieval,
-    normalization, and deterministic analytics, returning Gemini's natural
+    Orchestrates Groq LLM tool selection, Monday.com data retrieval,
+    normalization, and deterministic analytics, returning the agent's natural
     language explanation.
 
     Args:
@@ -110,13 +110,13 @@ async def chat(request: ChatRequest):
         current_query = raw_messages[-1].content
         logger.info(f"Received query: '{current_query}'")
 
-        # All earlier messages form the conversation history passed to Gemini
+        # All earlier messages form the conversation history passed to the LLM agent
         conversation_history = [
             {"role": msg.role, "content": msg.content}
             for msg in raw_messages[:-1]
         ]
 
-        # Execute the Gemini agent loop
+        # Execute the Groq Llama 3.3 70B agent loop
         reply = await run_agent(
             user_query=current_query,
             conversation_history=conversation_history,

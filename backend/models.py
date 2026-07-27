@@ -33,7 +33,7 @@ MODEL DESCRIPTIONS:
 
     ChatResponse:
         The response returned to the frontend.
-        Contains Gemini's final text answer.
+        Contains the BI agent's final text answer.
         Example:
         {
             "reply": "The Renewables pipeline is worth ₹2.1 Cr across..."

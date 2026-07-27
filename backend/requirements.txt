@@ -11,9 +11,6 @@ httpx==0.28.1              # Async HTTP client for Monday.com GraphQL API calls
 # --- LLM API (Groq Ultra-Fast Inference) ---
 groq==1.4.0                # Groq SDK for ultra-fast Llama 3.3 70B inference
 
-# --- Data Processing ---
-pandas==2.2.3              # DataFrame operations for normalization and aggregation
-
 # --- Data Validation ---
 pydantic==2.11.4           # Request/response model validation (used by FastAPI)
 

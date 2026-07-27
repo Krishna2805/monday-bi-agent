@@ -3,32 +3,18 @@ intent_fallback.py — Keyword-Based Intent Classifier
 ======================================================
 
 WHY THIS FILE EXISTS:
-    Gemini's function calling is reliable most of the time, but on
-    free-tier models (especially under load or with vague queries),
-    it can occasionally:
-      1. Return a text response without calling any tool
-      2. Call the wrong tool
-      3. Fail to extract parameters correctly
-
-    This module provides a safety net: a fast, deterministic,
-    keyword-based classifier that detects the user's intent from
-    their question text. If Gemini fails to select a tool, we
-    use this fallback to force the correct tool call.
+    LLM tool selection is reliable, but under high concurrency or for vague
+    queries, intent classification provides a deterministic fallback:
+      1. Detects domain intent (pipeline, revenue, operations) instantly
+      2. Ensures the appropriate tool handler is executed deterministically
 
 HOW IT FITS IN THE FLOW:
     1. User asks a question
-    2. classify_intent() runs on the raw question text (instant, no API call)
-    3. The question goes to Gemini for tool selection
-    4. IF Gemini returns a tool call → execute it normally (fallback unused)
-    5. IF Gemini returns NO tool call AND we detected an intent →
-       force-call the appropriate tool from INTENT_TOOL_MAP
-    6. IF Gemini returns NO tool call AND no intent detected →
-       return Gemini's text response as-is (it might be a greeting,
-       clarification, or non-data question)
+    2. classify_intent() runs on raw question text (instant, zero API overhead)
+    3. Returns target intent category ("pipeline", "revenue", "operations")
+    4. Routes to the primary tool handler in INTENT_TOOL_MAP
 
-    The fallback is a SAFETY NET, not a replacement. In normal
-    operation, Gemini handles tool selection correctly. The fallback
-    only activates when Gemini misses.
+    The fallback acts as a DETERMINISTIC SAFETY NET for routing.
 
 THREE INTENT CATEGORIES:
 
@@ -49,7 +35,7 @@ THREE INTENT CATEGORIES:
        operational data (execution status, delays). A query like
        "Which projects are delayed?" has nothing to do with revenue
        keywords like "billing" or "AR". Without the operations
-       category, this query would get no intent match, and if Gemini
+       category, this query would get no intent match, and if the LLM
        also misses, the user gets no data.
 
 KEYWORD SCORING:
@@ -60,7 +46,7 @@ KEYWORD SCORING:
       "AR outstanding", "delayed projects" are unambiguous)
     - Ties are rare (a question about both pipeline AND revenue
       is unusual in practice)
-    - If no keywords match at all, we return None and let Gemini
+    - If no keywords match at all, we return None and let the LLM
       handle it (the query might be a greeting or clarification)
 """
 
@@ -138,15 +124,14 @@ def classify_intent(query: str) -> str | None:
     Classify a user query into a business intent category.
 
     This is a fast, deterministic classifier that runs BEFORE the
-    Gemini API call. It provides a fallback intent in case Gemini
-    doesn't select a tool.
+    LLM generation call. It provides a fallback intent for tool routing.
 
     Args:
         query: The raw user question text (e.g., "How is our pipeline?")
 
     Returns:
         "pipeline", "revenue", "operations", or None.
-        None means no clear intent was detected — let Gemini decide.
+        None means no clear intent was detected.
 
     HOW SCORING WORKS:
         For each keyword set, count how many keywords appear in the query.

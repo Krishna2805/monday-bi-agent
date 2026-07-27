@@ -5,10 +5,10 @@ pipeline.py — Deal Pipeline Analytics
 WHY THIS FILE EXISTS:
     This module computes all deal pipeline metrics. It takes a list
     of normalized deal dicts (from normalize_deal()) and returns a
-    summary JSON dict that Gemini uses to explain pipeline health.
+    summary JSON dict that the LLM agent uses to explain pipeline health.
 
     These functions are:
-      - Pure: no API calls, no side effects, no Gemini interaction
+      - Pure: no API calls, no side effects, no LLM interaction
       - Deterministic: same input always produces same output
       - Independently testable: pass in sample data, check the output
 
@@ -71,8 +71,8 @@ def compute_pipeline_summary(
     Compute comprehensive pipeline metrics from normalized deals.
 
     This is the PRIMARY analytics function for the Deals board.
-    It's called internally by tool_handler.py when Gemini invokes
-    query_deals with output_format="summary" (the default).
+    It's called internally by tool_handler.py when query_deals is invoked
+    with output_format="summary" (the default).
 
     Args:
         deals: List of normalized deal dicts (from normalize_deal()).
@@ -100,8 +100,8 @@ def compute_pipeline_summary(
         }
 
     WHY SO MANY METRICS IN ONE FUNCTION:
-        Because the tool_handler calls this once and gives everything
-        to Gemini. If we split into separate functions (get_win_rate,
+        Because tool_handler calls this once and returns everything
+        to the agent. If we split into separate functions (get_win_rate,
         get_pipeline_value, etc.), each would need to filter and iterate
         the same data independently — wasteful. One pass, all metrics.
 

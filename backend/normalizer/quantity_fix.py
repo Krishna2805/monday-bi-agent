@@ -20,7 +20,7 @@ WHY THIS FILE EXISTS:
       - Balance quantity reporting
     
     The unit part is useful for:
-      - Context in Gemini's explanations ("5360 hectares surveyed")
+      - Context in agent explanations ("5360 hectares surveyed")
       - Grouping by measurement type
 
 PARSING STRATEGY:

@@ -8,22 +8,21 @@ WHY THIS FILE EXISTS:
     prompt engineering in the entire project.
 
     A well-crafted system prompt:
-      1. Prevents hallucination (tells Gemini what NOT to do)
+      1. Prevents hallucination (tells the LLM what NOT to do)
       2. Ensures consistent formatting (Indian number conventions)
       3. Provides business context (so answers make sense to leadership)
       4. Establishes guardrails (never calculate, never invent data)
 
 HOW IT'S USED:
-    This string is passed as `system_instruction` when initializing
-    the Gemini GenerativeModel. It's prepended to every conversation
-    and persists across the entire chat session.
+    This string is passed as system instructions when querying the
+    LLM inference engine. It's prepended to every conversation.
 
 DESIGN PRINCIPLES:
-    1. EXPLICIT NEGATIVES: We tell Gemini what NOT to do (don't calculate,
+    1. EXPLICIT NEGATIVES: We tell the LLM what NOT to do (don't calculate,
        don't guess, don't invent data). LLMs are eager to help and will
        hallucinate numbers if not explicitly restrained.
 
-    2. BUSINESS CONTEXT UP FRONT: Gemini needs to know this is a drone
+    2. BUSINESS CONTEXT UP FRONT: The LLM needs to know this is a drone
        survey company, that values are in INR, and that the fiscal year
        runs April-March. Without this, it might assume USD or calendar year.
 
@@ -31,7 +30,7 @@ DESIGN PRINCIPLES:
        verbose reports. We specify the exact format: answer first,
        supporting numbers, then caveats.
 
-    4. DATA QUALITY AWARENESS: We tell Gemini to always surface data
+    4. DATA QUALITY AWARENESS: We tell the agent to always surface data
        quality notes. This builds trust — users know the system is
        transparent about its limitations.
 """

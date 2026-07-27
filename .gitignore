@@ -18,9 +18,8 @@ node_modules/
 .DS_Store
 Thumbs.db
 
-# Markdown exclusions (ONLY main README.md and Decision_Log.md are committed)
+# Markdown exclusions (ONLY root README.md and Decision_Log.md are committed)
 *.md
-!README.md
-!Decision_Log.md
-!DECISION_LOG.md
-frontend/README.md
+**/*.md
+!/README.md
+!/Decision_Log.md

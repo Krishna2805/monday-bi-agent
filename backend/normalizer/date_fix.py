@@ -72,7 +72,7 @@ def parse_date(value) -> Optional[str]:
 
     WHY RETURN STRINGS NOT datetime OBJECTS:
         Our analytics functions compare dates as strings and pass them
-        to Gemini in JSON. Keeping them as "YYYY-MM-DD" strings means:
+        to the LLM in JSON. Keeping them as "YYYY-MM-DD" strings means:
         - They sort correctly as strings (lexicographic = chronological)
         - JSON-serializable without custom encoders
         - Easy to debug (you can read them directly)

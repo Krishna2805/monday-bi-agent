@@ -272,7 +272,7 @@ def format_deal_record(deal: dict) -> dict:
     """
     Format a normalized deal dict for the "records" output format.
 
-    When Gemini requests output_format="records" (e.g., "list all high
+    When output_format="records" is requested (e.g., "list all high
     probability deals"), we return individual deal records. This function
     selects the most relevant fields and creates a compact representation.
 
@@ -284,7 +284,7 @@ def format_deal_record(deal: dict) -> dict:
 
     WHY NOT RETURN THE FULL DICT:
         The full normalized dict has internal fields (like raw values)
-        that would confuse Gemini and waste tokens. We curate the fields
+        that would bloat the prompt and waste tokens. We curate the fields
         that are actually useful for business conversations.
     """
     return {

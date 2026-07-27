@@ -41,7 +41,7 @@ def filter_by_field(
 
     WHY CASE-INSENSITIVE BY DEFAULT:
         Users might type "mining" or "Mining" or "MINING" in their query.
-        Gemini normalizes this somewhat, but the filter should be lenient.
+        The tool input normalizes this somewhat, but the filter should be lenient.
         Monday.com's display values are also inconsistent in casing.
 
     Examples:
@@ -66,7 +66,7 @@ def apply_filters(items: list[dict], filters: dict[str, Optional[str]]) -> list[
     Apply multiple field filters to a list of items.
 
     This is the main filtering function used by tool_handler.py.
-    It takes the filter parameters from Gemini's tool call and
+    It takes the filter parameters from the tool call and
     applies them sequentially.
 
     Args:
@@ -83,7 +83,7 @@ def apply_filters(items: list[dict], filters: dict[str, Optional[str]]) -> list[
         but we apply them in dict order.
 
     Example:
-        # Gemini calls query_deals(sector="Mining", deal_status="Open")
+        # Tool call query_deals(sector="Mining", deal_status="Open")
         # tool_handler converts this to:
         filters = {"sector": "Mining", "deal_status": "Open", "probability": None}
         result = apply_filters(deals, filters)
@@ -99,7 +99,7 @@ def apply_filters(items: list[dict], filters: dict[str, Optional[str]]) -> list[
 def group_by_field(
     items: list[dict],
     field: str,
-    compute_fn: Callable
+    compute_fn: Callable[[list[dict]], Any]
 ) -> dict[str, Any]:
     """
     Group items by a field and apply a computation to each group.
@@ -151,7 +151,7 @@ def extract_deal_caveats(deals: list[dict]) -> list[str]:
     """
     Generate data quality caveats for a set of deals.
 
-    These caveats are included in the response JSON so Gemini can
+    These caveats are included in the response JSON so the LLM agent can
     communicate data limitations to the user. This ensures the user
     knows when numbers might be incomplete.
 
