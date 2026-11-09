@@ -1,5 +1,3 @@
-upd
-
 # Decision Log --- Monday.com Business Intelligence Agent
 
 ## 1. Key Assumptions Made

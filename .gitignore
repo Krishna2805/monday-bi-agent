@@ -11,6 +11,14 @@ node_modules/
 # Environment
 .env
 *.env
+!.env.example
+!backend/.env.example
+!frontend/.env.example
+
+# Local development notes & private backlogs
+*.local.md
+.*.local.md
+.workspace_notes.md
 
 # IDE & System
 .vscode/

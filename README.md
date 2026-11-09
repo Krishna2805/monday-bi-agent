@@ -1,6 +1,6 @@
 # Monday.com Business Intelligence Agent
 
-> A natural language conversational BI system powered by Groq Llama 3.3 70B, FastAPI, and React 18, delivering pre-calculated, data-caveated business insights directly over Monday.com Work Orders and Deals Pipeline boards.
+> A natural language conversational BI system powered by Groq Llama 3.3 70B, FastAPI, and React 19, delivering pre-calculated, data-caveated business insights directly over Monday.com Work Orders and Deals Pipeline boards.
 
 ---
 
@@ -31,7 +31,7 @@ Language models are probabilistic text engines, not calculation engines. Forcing
 
 ```
                      ┌────────────────────────────────────────┐
-                     │          React 18 Frontend UI          │
+                     │          React 19 Frontend UI          │
                      │  (Starter Chips, Executive Brief,      │
                      │   Markdown Renderer, Caveats Panel)    │
                      └───────────────────┬────────────────────┘
@@ -44,16 +44,10 @@ Language models are probabilistic text engines, not calculation engines. Forcing
                                          │
                                          ▼
                      ┌────────────────────────────────────────┐
-                     │  Intent Classifier (Keyword Safety Net)│
+                     │     Deterministic Intent Classifier    │
                      │  (pipeline / revenue / operations)     │
                      └───────────────────┬────────────────────┘
-                                         │
-                                         ▼
-                     ┌────────────────────────────────────────┐
-                     │   Groq LLM API (Llama 3.3 70B Engine)  │
-                     │ (Tool Selection: query_deals / query_wo)│
-                     └───────────────────┬────────────────────┘
-                                         │ Dispatch Tool Call
+                                         │ Route Tool
                                          ▼
 ┌───────────────────────────────────────────────────────────────────────────┐
 │                           Python Tool Handler                             │
@@ -69,7 +63,10 @@ Language models are probabilistic text engines, not calculation engines. Forcing
                                                     + Data Quality Caveats
                                                                  │
                                                                  ▼
-                                                Groq LLM (Natural Language Answer)
+                                                ┌─────────────────────────────────┐
+                                                │ Groq LLM (Llama 3.3 70B Engine) │
+                                                │ (Natural Language Synthesis)    │
+                                                └────────────────┬────────────────┘
                                                                  │
                                                                  ▼
                                                       React Markdown Response
@@ -86,7 +83,7 @@ Language models are probabilistic text engines, not calculation engines. Forcing
 | **HTTP Client** | `httpx` | Non-blocking async client with Monday.com GraphQL cursor pagination and exponential backoff retry logic (`2s → 4s → 8s`). |
 | **Data Processing** | Native Python (`re` + `datetime`) | Resolves Excel epoch date bugs, parses mixed quantity strings, detects placeholder values, and executes fast in-memory aggregations. |
 | **Caching Layer** | `cachetools` (`TTLCache`) | 10-minute in-memory cache on Monday.com board queries to protect against the 60 req/min free-tier rate limit. |
-| **Frontend UI** | React 18 + Vite + Tailwind CSS | Dark-mode executive UI featuring starter query chips, executive brief generator, markdown rendering, and collapsible caveats panel. |
+| **Frontend UI** | React 19 + Vite + Tailwind CSS | Dark-mode executive UI featuring starter query chips, executive brief generator, markdown rendering, and collapsible caveats panel. |
 | **Deployment** | Railway (Backend) & Vercel (Frontend) | Isolated containerized deployment with secure environment variable management. |
 
 ---
@@ -174,16 +171,16 @@ All calculations live in `backend/analytics/` as pure, deterministic Python func
 ### Deal Pipeline Metrics (`pipeline.py`)
 
 - **Total Pipeline**: Sum of `deal_value` for all open deals.
-- **Weighted Pipeline**: $\sum (\text{deal\_value} \times \text{weight})$ where $\text{High}=0.8$, $\text{Medium}=0.5$, $\text{Low}=0.2$.
-- **Win Rate**: $\frac{\text{Won Deals}}{\text{Won Deals} + \text{Dead Deals}} \times 100$ (excludes unresolved open deals).
-- **Stage Breakdown**: Count of open deals at each sales stage ($A \rightarrow N$).
+- **Weighted Pipeline**: `Sum(deal_value × weight)` where `High = 0.8`, `Medium = 0.5`, `Low = 0.2`.
+- **Win Rate**: `[Won Deals / (Won Deals + Dead Deals)] × 100` (excludes unresolved open deals).
+- **Stage Breakdown**: Count of open deals at each sales stage (A → N).
 
 ### Revenue & Operational Metrics (`revenue.py`)
 
 - **PO Value & Billed**: Evaluated Excl-GST (revenue earned by company).
 - **Collections & Accounts Receivable**: Evaluated Incl-GST (actual cash flow & client debt).
-- **Billing Percentage**: $\frac{\text{Billed Excl GST}}{\text{PO Value Excl GST}} \times 100$.
-- **Collection Percentage**: $\frac{\text{Collected Incl GST}}{\text{Billed Excl GST} \times 1.18} \times 100$.
+- **Billing Percentage**: `(Billed Excl GST / PO Value Excl GST) × 100`.
+- **Collection Percentage**: `[Collected Incl GST / (Billed Excl GST × 1.18)] × 100`.
 - **Operational Execution**: Counts by status (`Completed`, `Ongoing`, `Not Started`, `Pause/struck`).
 
 ---

@@ -22,7 +22,22 @@ WO_BOARD_ID: str = os.getenv("MONDAY_WO_BOARD_ID", "")
 DEALS_BOARD_ID: str = os.getenv("MONDAY_DEALS_BOARD_ID", "")
 
 # --- Startup Validation ---
-assert GROQ_API_KEY, "GROQ_API_KEY not set — add it to .env or environment"
-assert MONDAY_API_TOKEN, "MONDAY_API_TOKEN not set — get it from Monday.com developer settings"
-assert WO_BOARD_ID, "MONDAY_WO_BOARD_ID not set — add numeric ID from Monday.com board URL"
-assert DEALS_BOARD_ID, "MONDAY_DEALS_BOARD_ID not set — add numeric ID from Monday.com board URL"
+import logging
+
+_logger = logging.getLogger(__name__)
+
+missing_keys = []
+if not GROQ_API_KEY:
+    missing_keys.append("GROQ_API_KEY")
+if not MONDAY_API_TOKEN:
+    missing_keys.append("MONDAY_API_TOKEN")
+if not WO_BOARD_ID:
+    missing_keys.append("MONDAY_WO_BOARD_ID")
+if not DEALS_BOARD_ID:
+    missing_keys.append("MONDAY_DEALS_BOARD_ID")
+
+if missing_keys:
+    _logger.warning(
+        f"Missing configuration keys: {', '.join(missing_keys)}. "
+        "Populate backend/.env or set system environment variables before invoking live endpoints."
+    )

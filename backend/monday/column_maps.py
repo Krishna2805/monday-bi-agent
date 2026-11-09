@@ -52,7 +52,7 @@ WORK_ORDER_COLUMN_MAP = {
     "text_mm5ng4tk":          "bd_personnel_code",   # BD/KAM Personnel code
     "dropdown_mm5nwqzm":      "sector",              # Sector
     "dropdown_mm5n4m2b":      "work_type",           # Type of Work
-    "color_mm5nvbme":         "software_platform",   # Is any Skylark software platform part of deliverables
+    "color_mm5nvbme":         "software_platform",   # Software platform deliverable flag
 
     # --- Financial (all amounts in INR, "Masked" label is anonymization marker) ---
     "date_mm5nawh5":          "last_invoice_date",   # Last invoice date
